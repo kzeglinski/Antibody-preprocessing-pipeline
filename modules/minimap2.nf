@@ -1,6 +1,6 @@
 /*
 Utilize minimap2 to align Oxford Nanopore DNA read sequences contained in fastq files against a reference genome database.
-The aligned sequence is output as a sam file.
+The aligned sequence is output as a SAM file.
 */
 
 //Enable typed processes
