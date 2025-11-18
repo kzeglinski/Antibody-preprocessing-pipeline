@@ -13,12 +13,13 @@ nextflow.preview.types = true
 // Pipeline parameters
 params {
 	read_files: String = "${projectDir}/data/*.fastq"
-	name: String = "SAMPLE_NAME"
+	name: String = "SAMPLE_1"
 	phagemid_ref: Path = "${projectDir}/data/reference_files/fab_phagemid.fa"
 }
 
 // Import processes or subworkflows to be run in the workflow
 include { minimap2 } from './modules/minimap2'
+include { samtools } from './modules/samtools'
 
 workflow {
 	// Create channel for the read files and reference genome file
@@ -29,8 +30,9 @@ workflow {
 	// Do I need to include the reference, or can I use this in the process doc?
 	// input_ch = read_files.combine(phagemid_ref)
 
-// # qc: % aligning to the reference (gDNA/helper phage contamination)
+	// QC: % aligning to the reference (gDNA/helper phage contamination)
 	minimap2(read_files, ref, params.name)
+	samtools(minimap2.out.aligned_read, params.name)
 
     // publish:
     // samples = ch_samples
@@ -48,7 +50,6 @@ workflow {
 // matchbox_script=/vast/projects/antibody_sequencing/PC008/antibody_preprocess.mb
 // heavy_file="${name}_heavy.fasta"
 // light_file="${name}_light.fasta"
-
 
 
 // # extract with matchbox
