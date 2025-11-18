@@ -1,5 +1,5 @@
 /*
-Process utilizing minimap2 to align the Oxford Nanopore DNA read sequences contained in fastq files against a reference genome database.
+Utilize minimap2 to align Oxford Nanopore DNA read sequences contained in fastq files against a reference genome database.
 The aligned sequence is output as a sam file.
 */
 
@@ -24,14 +24,14 @@ process minimap2 {
 	name: String // List of sample names
 	
 	output:
-	out_file: Path = file("${name}_aligned.sam")
-    //emit: aligned_read
+	aligned_read: Path = file("${name}_aligned.sam")
 
-	// Run minimap2
-	// map oxford nanopore reads to a reference and output as a sam file
-	// -a Generate CIGAR and output alignments in the SAM format
-	// -x map-ont Sets preset for ONT alignment
-	// -o output alignments to sam file
+	/*
+	Run minimap, mapping reads to a reference and outputs a sam file
+	-a			Generates CIGAR and outputs alignments in sam format
+	-x map-ont	Sets preset for ONT alignment
+	-o			Output alignments to sam file
+	*/
     script:
     """
 	minimap2 \\
