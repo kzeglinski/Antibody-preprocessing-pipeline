@@ -6,18 +6,20 @@ Utilize matchbox to extract heavy and light chains
 nextflow.preview.types = true
 
 process matchbox {
-	tag "${name}"
+	tag "${sample_name}"
 
 	// Declare inputs required for the process
     input:
     read_file: Path // Path for DNA sequence fastq files
 	matchbox_path: Path // Path to matchbox package
     matchbox_script: Path // Path to matchbox script
-	name: String // Sample name
+	sample_name: String // Sample name
 	
 	// Declare outputs
 	output:
-	matchbox_stats: Path = file("${name}_extract_stats.txt")
+	matchbox_stats: Path = file("${sample_name}_extract_stats.txt")
+    heavy_file: Path = file("${sample_name}_heavy.fasta")
+    light_file: Path = file("${sample_name}_light.fasta")
 
     /*
     Run matchbox script, output heavy and light chain reads, and statistics
@@ -29,7 +31,7 @@ process matchbox {
     """
 	${matchbox_path} \\
     -s ${matchbox_script} -e 0.3 \\
-    -a "seqid='${name}'" \\
-    ${read_file} > "${name}_extract_stats.txt"
+    -a "seqid='${sample_name}'" \\
+    ${read_file} > "${sample_name}_extract_stats.txt"
     """
 }
