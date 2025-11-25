@@ -17,7 +17,7 @@ process matchbox {
 	
 	// Declare outputs
 	output:
-	matchbox_stats: Path = file("${sample_name}_extract_stats.txt")
+	matchbox_stats: Path = file("${sample_name}_count.csv")
     heavy_file: Path = file("${sample_name}_heavy.fasta")
     light_file: Path = file("${sample_name}_light.fasta")
     sample_name: String = sample_name
@@ -25,7 +25,7 @@ process matchbox {
     /*
     Run matchbox script, output only heavy and light chain reads, and statistics
     -s  Execute the matchbox script
-    -e  Include error tolerance of 0.3 for insertions, deletions and substitutions
+    -e  Include error tolerance of 0.3 (30%) for insertions, deletions and substitutions
     -a  Set seqid argument as a string
     */
     script:
@@ -34,7 +34,7 @@ process matchbox {
 	matchbox \\
     -s ${matchbox_script} -e 0.3 \\
     -a "seqid='${sample_name}'" \\
-    ${read_file} > "${sample_name}_extract_stats.txt"
+    ${read_file}
     """
 }
 //--with-reverse-complement

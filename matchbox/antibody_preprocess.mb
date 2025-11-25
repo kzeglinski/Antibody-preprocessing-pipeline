@@ -1,39 +1,51 @@
-# Matchbox script to rearrange the read sequence so the variable light chain occurs at the start of the read sequence
+# Matchbox script to rearrange the read sequence so the variable light chain occurs at the start of the read sequence, and outputs the heavy and light chain separately
+
+
+# Declare sequences from reference to use to extract HC and LC
+# Light chain before and after sequences
+LCss            = ATGAAAAAGACAGCTATCGCGATTGCAGTG
+LC_after_lambda = GGAACTGTGGCTGCACCATCTGTCTTCATC
+LC_after_kappa  = GGTCAGCCCAAGGCTGCCCCCTCGGTCACT
+
+# Heavy chain before and after sequences
+HCss            = ATGAAATACCTATTGCCTACGGCAGCCGCC
+HC_after        = GCTTCCACCAAGGGCCCACCGGTCTTCCCG
+
+# Assign sample name id
+seqid = args.seqid
+
+# Assign count csv name
+count_name = '{seqid}_count'
 
 # Filter for only reads less than 15000bp long to minimize memory error
 if len(read.seq) < 15000 {
 	
-        # Assign sample name id
-        seqid = args.seqid
-
         # Count total number of reads
-        count!('total reads')
+        count!('total reads', name = count_name)
 
-        # if read matches [before:_ after:(ATGAAAAAGACAGCTATCGCGATTGCAGTG _)]
-
-        if read matches [before:_ ATGAAAAAGACAGCTATCGCGATTGCAGTG after:_] => {
+        if read matches [before:_ after:(LCss _)] => {
                 
                 # Count number of reads that can be rotated
-                count!('rotated')
+                count!('rotated', name = count_name)
 
                 # Rearrange light chain to the start of the read sequence
                 rotated = after.concat(before)
 
                 # Extract heavy and light chains
                 # Identify whether a heavy chain exists
-                if rotated matches [_ GGCCTAATCTATTTCAAGGAGACAGTCATA heavy:_ GCTTCCACCAAGGGCCCATCGGTCTTCCCG _] => {
-                        
+                if rotated matches [_ heavy:(HCss _ HC_after) _] => {
+
                         # Count number of heavy chains identified
-                        count!('heavy')
+                        count!('heavy', name = count_name)
                         
                         # If a heavy chain exists, look for a corresponding light chain
                         if rotated matches {
                                 
                                 # First try and match the kappa light chain
-                                [_ GCGGATAACAATTTCACACAGGAAACAGCT light:_ GGTCAGCCCAAGGCTGCCCCCTCGGTCACT _] => {
+                                [_ light:(LCss _ LC_after_kappa) _] => {
                                         
                                         # Count number of heavy and kappa light chains were found
-                                        count!('heavy + kappa')
+                                        count!('heavy + kappa', name = count_name)
 
                                         # Output heavy and light chain sequences to a file
                                         heavy.out!('{seqid}_heavy.fasta')
@@ -41,44 +53,44 @@ if len(read.seq) < 15000 {
                                 }
 
                                 # Else try and match the lambda light chain
-                                [_ GCGGATAACAATTTCACACAGGAAACAGCT light:_ GATCAAACGAAGGCTGCACCATCTGTCATT _] => {
+                                [_ light:(LCss _ LC_after_lambda) _] => {
                                         
                                         # Count number of heavy and lambda light chains were found
-                                        count!('heavy + lambda')
+                                        count!('heavy + lambda', name = count_name)
                                         
                                         # Output heavy and light chain sequences to a file
                                         heavy.out!('{seqid}_heavy.fasta')
                                         light.out!('{seqid}_light.fasta')
+                                }
                         }
-                }
                 }
         }
 
         # Attempt previous code for the reverse complement sequence
-        if -read matches [before:_ ATGAAAAAGACAGCTATCGCGATTGCAGTG after:_] => {
+        if -read matches [before:_ after:(LCss _)] => {
 
                 # Count number of reverse complement reads that can be rotated
-                count!('rc rotated')
+                count!('rc rotated', name = count_name)
 
                 # Rearrange light chain to the start of the read sequence
                 rotated = after.concat(before)
                 
                 # Extract reverse complement heavy and light chains
                 # Identify whether a heavy chain exists
-                if rotated matches [_ GGCCTAATCTATTTCAAGGAGACAGTCATA heavy:_ GCTTCCACCAAGGGCCCATCGGTCTTCCCG _] => {
+                if rotated matches [_ heavy:(HCss _ HC_after) _] => {
                         
                         # Count number of reverse complement heavy chains identified
-                        count!('rc heavy')
+                        count!('rc heavy', name = count_name)
                         
                         # If a heavy chain exists, look for a corresponding light chain
                         # First try and match the kappa light chain
                         if rotated matches{
 
                                 # First try and match the kappa light chain
-                                [_ GCGGATAACAATTTCACACAGGAAACAGCT light:_ GGTCAGCCCAAGGCTGCCCCCTCGGTCACT _] => {
+                                [_ light:(LCss _ LC_after_kappa) _] => {
                                         
                                         # Count number of reverse complement heavy and kappa light chains were found
-                                        count!('rc heavy + kappa')
+                                        count!('rc heavy + kappa', name = count_name)
                                         
                                         # Output heavy and light chain sequences to a file
                                         heavy.out!('{seqid}_heavy.fasta')
@@ -86,10 +98,10 @@ if len(read.seq) < 15000 {
                                 }
                                 
                                 # Else try and match the lambda light chain
-                                [_ GCGGATAACAATTTCACACAGGAAACAGCT light:_ GATCAAACGAAGGCTGCACCATCTGTCATT _] => {
-                                        
+                                [_ light:(LCss _ LC_after_lambda) _] => {
+
                                         # Count number of reverse complement heavy and lambda light chains were found
-                                        count!('rc heavy + lambda')
+                                        count!('rc heavy + lambda', name = count_name)
                                         
                                         # Output heavy and light chain sequences to a file
                                         heavy.out!('{seqid}_heavy.fasta')

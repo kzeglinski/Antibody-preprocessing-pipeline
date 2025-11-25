@@ -35,8 +35,6 @@ def get_name(file) {
 workflow {
 
 	// Create channel for the read files and extract the barcode from file name as the sample name
-	// read_files = channel.fromPath(params.read_files)
-
 	files = channel.fromPath(params.read_files)
 	.map {
 		file -> tuple(file, get_name(file))
