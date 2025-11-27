@@ -2,6 +2,7 @@
 
 //Enable strict syntax
 //export NXF_SYNTAX_PARSER=v2 //Add to config file?
+
 //Enable typed processes
 nextflow.preview.types = true
 
@@ -10,13 +11,23 @@ nextflow.preview.types = true
 //     error "This workflow requires Nextflow version 23.10 or greater -- You are running version $nextflow.version"
 // }
 
+// // Pipeline parameters
+// params {
+// 	read_files: String = "${projectDir}/data/*.fastq"
+// 	phagemid_ref: Path = "${projectDir}/data/reference_files/fab_phagemid.fa"
+// 	matchbox_path: Path = "${projectDir}/matchbox/matchbox"
+// 	// matchbox_path=/vast/projects/antibody_sequencing/matchbox/target/release/matchbox
+// 	matchbox_antibody_preprocess_script: Path = "${projectDir}/matchbox/antibody_preprocess.mb"
+// 	// matchbox_script=/vast/projects/antibody_sequencing/PC008/antibody_preprocess.mb
+// }
+
 // Pipeline parameters
 params {
-	read_files: String = "${projectDir}/data/*.fastq"
-	phagemid_ref: Path = "${projectDir}/data/reference_files/fab_phagemid.fa"
-	matchbox_path: Path = "${projectDir}/matchbox/matchbox"
+	read_files: String
+	phagemid_ref: Path
+	matchbox_path: Path
 	// matchbox_path=/vast/projects/antibody_sequencing/matchbox/target/release/matchbox
-	matchbox_antibody_preprocess_script: Path = "${projectDir}/matchbox/antibody_preprocess.mb"
+	matchbox_antibody_preprocess_script: Path
 	// matchbox_script=/vast/projects/antibody_sequencing/PC008/antibody_preprocess.mb
 }
 
@@ -32,6 +43,7 @@ def get_name(file) {
 }
 
 workflow {
+
 	main:
 	// Create channel for the read files and extract the barcode from file name as the sample name
 	files = channel.fromPath(params.read_files)
@@ -63,13 +75,16 @@ workflow {
 	annotated_hc = riot_out.annot_heavy
 	annotated_lc = riot_out.annot_light
 
+	// Completion message
 	onComplete:
     println "Pipeline completed at: $workflow.complete"
 
+	// Error message
 	onError:
     println "Error: Pipeline execution stopped with the following message: ${workflow.errorMessage}"
 }
 
+// Set output paths
 output {
 	bam_file {
         path "1. aligned reads"
