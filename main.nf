@@ -1,7 +1,8 @@
 #!/usr/bin/env nextflow
 
 //Enable strict syntax
-//export NXF_SYNTAX_PARSER=v2 //Add to config file?
+//export NXF_SYNTAX_PARSER=v2
+//export NXF_DATE_FORMAT="yyyy-MM-dd HH:mm:ss"
 
 //Enable typed processes
 nextflow.preview.types = true
