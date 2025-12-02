@@ -14,9 +14,11 @@ params {
 	// matchbox_path=/vast/projects/antibody_sequencing/matchbox/target/release/matchbox
 	matchbox_antibody_preprocess_script: Path
 	// matchbox_script=/vast/projects/antibody_sequencing/PC008/antibody_preprocess.mb
+	help: Boolean
 }
 
 // Import processes or subworkflows to be run in the workflow
+include { header } from './modules/header'
 include { minimap2 } from './modules/minimap2'
 include { samtools } from './modules/samtools'
 include { matchbox } from './modules/matchbox'
@@ -27,12 +29,43 @@ def get_name(file) {
     return (file.baseName =~ /barcode\d+/)[0]
 }
 
+/// Help function 
+// def helpMessage() {
+//     log.info"""
+//   Usage:  nextflow run main.nf --input <samples.tsv> 
+
+//   Required Arguments:
+
+//   --input		Specify full path and name of sample input file.
+
+//   Optional Arguments:
+
+//   --outdir	Specify path to output directory. 
+	
+// """.stripIndent()
+// }
+
 workflow {
 	main:
 	// // Validate correct version is used
 	// if( !nextflow.version.matches('>=25.10.2') ) {
     // error "This workflow requires Nextflow version 23.10 or greater -- You are running version $nextflow.version"
 	// }
+
+	// Print pipeline information
+	// header()
+
+	if ( params.help ) { 
+	// if ( params.help || params.input == false ) {   
+	// Invoke the help function above and exit
+	// helpMessage()
+	println "Help message to be printed"
+	exit 1
+
+	// If none of the above are a problem, then run the workflow
+	} 
+	
+	else {
 
 	// Create channel for the read files and extract the barcode from file name as the sample name
 	files = channel.fromPath(params.read_files)
@@ -53,6 +86,7 @@ workflow {
 
 	// Annotate heavy and light chain sequences
 	riot_out = riot(matchbox_out.matchbox_files) 
+	}
 
 	// Publish outputs
     publish:
@@ -66,11 +100,24 @@ workflow {
 
 	// Completion message
 	onComplete:
-    println "Pipeline completed at: $workflow.complete"
+	log.info """
+	=====================================================================================
+	Workflow execution summary
+	=====================================================================================
 
+	Completed at	: ${workflow.complete}
+	Duration	: ${workflow.duration}
+	Success		: ${workflow.success}
+	Work directory	: ${workflow.workDir}
+	Exit status	: ${workflow.exitStatus}
+	results		: ${workflow.outputDir}
+
+	=====================================================================================
+	"""
+	
 	// Error message
 	onError:
-    println "Error: Pipeline execution stopped with the following message: ${workflow.errorMessage}"
+    log.error "Error: Pipeline execution stopped with the following message: ${workflow.errorMessage}"
 }
 
 // Set output paths
