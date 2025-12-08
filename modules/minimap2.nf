@@ -8,20 +8,20 @@ nextflow.preview.types = true
 process minimap2 {
 	tag "${sample_name}"
 
-	// conda 'bioconda::minimap2'
-	// conda (params.enable_conda ? 'bioconda::minimap2=2.30' : null)
+	// Enable conda and install minimap2 if conda profile is set
+	conda (params.enable_conda ? 'bioconda::minimap2=2.30' : null)
 	
-	// Docker container for conda minimap2 (linux/amd64)
-	// container "community.wave.seqera.io/library/minimap2:2.30--dde6b0c5fbc82ebd"
-
-	// Singularity container for conda minimap2 (linux/amd64)
-	// container "oras://community.wave.seqera.io/library/minimap2:2.30--3bf3d6cb39a98dae"
+	// Use Singularity container or pull from Docker container for minimap2 v2.30 (linux/amd64) if singularity profile is enabled
+	container "${ (workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container) ?
+    'oras://community.wave.seqera.io/library/minimap2:2.30--3bf3d6cb39a98dae' :
+    'community.wave.seqera.io/library/minimap2:2.30--dde6b0c5fbc82ebd' }"
 
     input:
 	// Tuple for sample name, and path for DNA sequence fastq files
 	(sample_name, read_file): Tuple<String, Path>
 	reference: Path // Path for reference genome
 	
+	// Output tuple with sample name and sam file
 	output:
 	minimap_out = tuple(sample_name, file("${sample_name}_aligned.sam"))
 
