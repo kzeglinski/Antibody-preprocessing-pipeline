@@ -21,8 +21,7 @@ Optional Arguments:
 -profile		: Specify the profile to run nextflow through.
 			  Options - [standard, wehi, conda, singularity, local] (default: standard).
 """.stripIndent()
-    }
-
+    
     exit 1
-
+    }
 }
