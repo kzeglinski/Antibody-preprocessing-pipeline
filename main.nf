@@ -17,7 +17,7 @@ params {
 
 // Import processes or subworkflows to be run in the workflow
 include { header } from './modules/header'
-// include { validate_params } from './modules/validate_params'
+include { validate_params } from './modules/validate_params'
 include { helpMessage } from './modules/help'
 include { minimap2 } from './modules/minimap2'
 include { samtools } from './modules/samtools'
@@ -54,12 +54,10 @@ workflow {
 	
 	// Print pipeline information
 	header()
-	
+
 	// Validate parameters
-	// validate_params(params.read_files, "Read files")
-	// validate_params(params.phagemid_ref, "Reference genome")
-	// validate_params(params.matchbox_script, "Matchbox script")
-	param_validation()
+	validate_params(params.read_files, params.phagemid_ref, params.matchbox_script)
+	// param_validation()
 
 	// Create channel for the read files and extract the barcode from file name as the sample name
 	files = channel.fromPath(params.read_files)
@@ -77,7 +75,7 @@ workflow {
 	matchbox_out = matchbox(files, params.matchbox_script)
 
 	// Annotate heavy and light chain sequences
-	riot_out = riot(matchbox_out.matchbox_files) 
+	riot_out = riot(matchbox_out.matchbox_files)
 
 
 	// Publish outputs
