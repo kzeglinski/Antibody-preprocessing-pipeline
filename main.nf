@@ -11,6 +11,7 @@ params {
 	read_files: String
 	phagemid_ref: Path
 	matchbox_script: Path
+	matchbox_parameters: Path
 	help: Boolean
 	enable_conda: Boolean
 }
@@ -49,7 +50,7 @@ workflow {
 	header()
 
 	// Validate parameters
-	paths_to_validate = [params.read_files, params.phagemid_ref, params.matchbox_script].join(",")
+	paths_to_validate = [params.read_files, params.phagemid_ref, params.matchbox_script, params.matchbox_parameters].join(",")
     validate_params(paths_to_validate)
 
 	// Create channel for the read files and extract the barcode from file name as the sample name
@@ -65,7 +66,7 @@ workflow {
 	sam_out = samtools(minimap_out)
 
 	// Extract heavy and light chain pairs from the reads, and output summary stats
-	matchbox_out = matchbox(files, params.matchbox_script)
+	matchbox_out = matchbox(files, params.matchbox_script, params.matchbox_parameters)
 
 	// Annotate heavy and light chain sequences
 	riot_out = riot(matchbox_out.matchbox_files)

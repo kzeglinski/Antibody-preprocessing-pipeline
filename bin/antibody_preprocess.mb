@@ -4,13 +4,13 @@
 
 # Declare sequences from reference to use to extract HC and LC
 # Light chain before and after sequences
-LCss            = ATGAAAAAGACAGCTATCGCGATTGCAGTG
-LC_after_lambda = GGAACTGTGGCTGCACCATCTGTCTTCATC
-LC_after_kappa  = GGTCAGCCCAAGGCTGCCCCCTCGGTCACT
+LCss            = args.LCss
+LC_after_lambda = args.LC_after_lambda
+LC_after_kappa  = args.LC_after_kappa
 
 # Heavy chain before and after sequences
-HCss            = ATGAAATACCTATTGCCTACGGCAGCCGCC
-HC_after        = GCTTCCACCAAGGGCCCACCGGTCTTCCCG
+HCss            = args.HCss
+HC_after        = args.HC_after
 
 # Assign sample name id
 seqid = args.seqid
