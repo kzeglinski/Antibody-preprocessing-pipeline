@@ -39,7 +39,6 @@ process run_matchbox {
 	matchbox \\
     -s ${matchbox_script} -e 0.3 \\
     -a "seqid='${sample_name}', LCss = ${LCss}, LC_after_lambda = ${LC_after_lambda}, LC_after_kappa = ${LC_after_kappa}, HCss = ${HCss}, HC_after = ${HC_after}" \\
-    --with-reverse-complement \\
     ${read_file}
     """
 }
