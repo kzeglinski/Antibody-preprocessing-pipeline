@@ -1,0 +1,94 @@
+---
+title: "Antibody Preprocessing"
+author: "CBT & Ritchie Lab"
+format: dashboard
+---
+
+```{r}
+# Install package
+library(tidyverse)
+library(data.table)
+library(ggplot2)
+library(ggiraph)
+library(plotly)
+library(formattable)
+library(DT)
+```
+
+# Aligned Reads
+
+```{r}
+# Read in data
+#| include: false
+
+# Get list of files
+files <- list.files(
+    path = "./results/1. aligned reads/stats",
+    pattern = "\\.tsv$",
+    full.names = TRUE
+)
+
+# Read in files
+data_list <- lapply(files, fread, na.strings = c("N/A"))
+# Add in barcode from file name as id col
+names(data_list) <- str_replace(basename(files), "_alignment_stats.tsv", "")
+
+# Combine datasets together and rename columns
+combined_aligned_stats <- rbindlist(data_list, idcol = "sample_id", fill = TRUE)
+combined_aligned_stats <- rename(combined_aligned_stats, "QC_pass" = V1, "QC_fail" = V2, "category" = V3)
+
+# Rename and extract required rows
+rows_required <- list("total", "mapped", "mapped %", "primary", "secondary", "supplementary")
+combined_aligned_stats <- combined_aligned_stats %>%
+    mutate(category = ifelse(category == "total (QC-passed reads + QC-failed reads)",
+        "total", category
+    )) %>%
+    mutate(across(
+        c(QC_pass, QC_fail),
+        ~ ifelse(str_detect(.x, "%"),
+            as.numeric(str_replace(.x, "%", "")) / 100,
+            as.numeric(.x)
+        )
+    )) %>%
+    filter(category %in% rows_required)
+```
+
+## Row {.flow}
+
+```{r}
+#| title: plot 1
+#| padding: 0px
+data <- mtcars
+data$carname <- row.names(data)
+
+gg_point <- ggplot(data = data) +
+    geom_point_interactive(aes(
+        x = wt, y = qsec, color = disp,
+        tooltip = carname, data_id = carname
+    )) +
+    theme_minimal()
+
+girafe(ggobj = gg_point)
+```
+
+::: {.card title="My Title"}
+This text will be displayed within a card
+:::
+
+# Extracted reads
+
+## Row {.fill}
+
+```{R}
+#| title: Plot 2
+
+```
+
+```{R}
+#| title: Plot 3
+
+```
+
+# Annotated reads
+
+## Row {.fill}
