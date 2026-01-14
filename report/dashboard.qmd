@@ -1,12 +1,17 @@
 ---
 title: "Antibody Preprocessing"
 author: "CBT & Ritchie Lab"
+date: today
 format: dashboard
+knitr:
+    opts_knit:
+        root.dir: '../'
 ---
 
 ```{r}
 # Install package
 library(tidyverse)
+library(vroom)
 library(data.table)
 library(ggplot2)
 library(ggiraph)
@@ -23,7 +28,7 @@ library(DT)
 
 # Get list of files
 files <- list.files(
-    path = "./results/1. aligned reads/stats",
+    path = "./results/1_aligned_reads/stats",
     pattern = "\\.tsv$",
     full.names = TRUE
 )
@@ -35,7 +40,9 @@ names(data_list) <- str_replace(basename(files), "_alignment_stats.tsv", "")
 
 # Combine datasets together and rename columns
 combined_aligned_stats <- rbindlist(data_list, idcol = "sample_id", fill = TRUE)
-combined_aligned_stats <- rename(combined_aligned_stats, "QC_pass" = V1, "QC_fail" = V2, "category" = V3)
+combined_aligned_stats <- rename(combined_aligned_stats,
+    "QC_pass" = V1, "QC_fail" = V2, "category" = V3
+)
 
 # Rename and extract required rows
 rows_required <- list("total", "mapped", "mapped %", "primary", "secondary", "supplementary")
@@ -43,37 +50,56 @@ combined_aligned_stats <- combined_aligned_stats %>%
     mutate(category = ifelse(category == "total (QC-passed reads + QC-failed reads)",
         "total", category
     )) %>%
-    mutate(across(
-        c(QC_pass, QC_fail),
-        ~ ifelse(str_detect(.x, "%"),
-            as.numeric(str_replace(.x, "%", "")) / 100,
-            as.numeric(.x)
-        )
+    select(-QC_fail) %>%
+    mutate(QC_pass, ifelse(str_detect(QC_pass, "%"),
+        as.numeric(str_replace(QC_pass, "%", "")),
+        as.numeric(QC_pass)
     )) %>%
     filter(category %in% rows_required)
+
+combined_aligned_stats_wide <- combined_aligned_stats %>%
+    pivot_wider(
+        id_cols = sample_id,
+        names_from = category,
+        values_from = QC_pass
+    )
 ```
 
 ## Row 
 ```{r}
 #| content: valuebox
-#| title: "Spam per day"
+#| title: "Samples"
+samples <- combined_aligned_stats %>%
+    distinct(sample_id) %>%
+    summarise(n = n()) %>%
+    as.numeric()
+
 list(
     icon = "file-earmark-medical",
     color = "info",
-    value = combined_aligned_stats %>%
-        distinct(sample_id) %>%
-        summarise(n = n())
+    value = samples
 )
 ```
 
 ```{r}
+#| content: valuebox
+#| title: "Total reads"
+total_reads <- sum(as.numeric(combined_aligned_stats_wide$total))
 
+list(
+    icon = "file-earmark-medical",
+    color = "info",
+    value = total_reads
+)
 ```
+
 ## Row {.flow}
 
 ```{r}
 #| title: plot 1
 #| padding: 0px
+#| eval: false
+
 data <- mtcars
 data$carname <- row.names(data)
 

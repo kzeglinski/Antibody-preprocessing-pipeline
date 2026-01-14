@@ -94,7 +94,7 @@ The following provides detail after extracting the heavy and light sequence sequ
 
 # Get list of files
 counts_files <- list.files(
-    path = "./results/2. extracted reads/counts",
+    path = "./results/2. extracted reads/best/counts",
     pattern = "\\.csv$",
     full.names = TRUE
 )
@@ -182,18 +182,24 @@ combined_counts_prop <- combined_counts_prop %>%
     ungroup() %>%
     select(-prop) %>%
     right_join(combined_counts_prop, by = join_by(sample_id, sequence)) %>%
-    mutate(diff = ifelse(is.na(diff), prop, diff))
+    mutate(diff = ifelse(is.na(diff), prop, diff)) %>%
+    mutate(sequence = factor(sequence, levels = c("total reads", "rotated", "heavy", "heavy + kappa", "heavy + lambda")))
+
 
 combined_counts_prop %>%
     ggplot() +
     geom_col(
-        aes(y = fct_reorder(sample_id, count), x = diff, fill = sequence),
+        aes(y = fct_reorder(sample_id, count), x = diff, fill = fct_rev(sequence)),
         position = "stack"
-    ) +
+    ) + 
+    guides(fill = guide_legend(reverse = TRUE)) +
+    scale_fill_manual(values = c("total reads" = "#31eb3af4",
+                                "rotated" = "#faf742ca",
+                                "heavy" = "#ed9325ff",
+                                "heavy + kappa" = "#51daf9c2",
+                                "heavy + lambda" = "#45b7d187")) +
     labs(x = "Proportion of sequences", y = "Sample", fill = "Sequence")
 # Change light sequence colors
-
-#### Why is heavy reads less than heavy + light totals?
 ```
 
 ## 3. Annotated reads
