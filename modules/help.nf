@@ -18,10 +18,8 @@ Required Arguments:
 --matchbox_script	: Specify matchbox script
 --matchbox_parameters	: Specify parameters for matchbox script
 
-
 Optional Arguments:
 --output_dir		: Where the output files will be written to (default: "$projectDir/results")
---barcode_dir           : Whether the input fastq files are located within folders named barcode01 etc (default: false)
 -profile		: Specify the profile to run nextflow through
 			  Options - [standard, wehi, conda, singularity, local] (default: standard)
 """.stripIndent()
