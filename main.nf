@@ -13,7 +13,6 @@ params {
 	phagemid_ref: Path
 	matchbox_script: Path
 	matchbox_parameters: Path
-	barcode_dir: Boolean
 	help: Boolean
 	enable_conda: Boolean
 }
@@ -56,49 +55,43 @@ workflow {
 
 	// Validate parameters
 	paths_to_validate = [params.read_dir, params.phagemid_ref, params.matchbox_script, params.matchbox_parameters].join(",")
-    // validate_params(paths_to_validate)
+    validate_params(paths_to_validate)
 
-	// // Create channel for the read files and extract the barcode from file name as the sample name
-	// files = channel.fromPath(params.read_dir)
-	// .map {
-	// 	file -> tuple(get_name(file), file)
-	// }
+	sample = parse_sample_sheet(params.read_dir, params.sample_sheet)
 
-	sample = parse_sample_sheet(params.read_dir, params.sample_sheet, params.barcode_dir)
+	// QC: Identify % aligning to the reference (gDNA/helper phage contamination)
+	minimap_out = minimap2(sample, params.phagemid_ref)
 
-	// // QC: Identify % aligning to the reference (gDNA/helper phage contamination)
-	// minimap_out = minimap2(files, params.phagemid_ref)
+	// Convert and index the SAM file format to BAM file format
+	sam_out = samtools(minimap_out)
 
-	// // Convert and index the SAM file format to BAM file format
-	// sam_out = samtools(minimap_out)
+	// Extract heavy and light chain pairs from the reads
+	// Match and output all
+	matchbox_out_all = matchbox(sample, params.matchbox_script, 
+		params.matchbox_parameters, "all")
+	// Match and output only the best match
+	matchbox_out_best = matchbox2(sample, params.matchbox_script, 
+		params.matchbox_parameters, "all-best")
 
-	// // Extract heavy and light chain pairs from the reads
-	// // Match and output all
-	// matchbox_out_all = matchbox(files, params.matchbox_script, 
-	// 	params.matchbox_parameters, "all")
-	// // Match and output only the best match
-	// matchbox_out_best = matchbox2(files, params.matchbox_script, 
-	// 	params.matchbox_parameters, "all-best")
-
-	// // Annotate heavy and light chain sequences
-	// riot_out_best = riot(matchbox_out_best.matchbox_files)
-	// riot_out_all = riot2(matchbox_out_all.matchbox_files)
+	// Annotate heavy and light chain sequences
+	riot_out_best = riot(matchbox_out_best.matchbox_files)
+	riot_out_all = riot2(matchbox_out_all.matchbox_files)
 
 
-	// // Publish outputs
-    // publish:
-	// concat_files = sample
-	// bam_file = sam_out.aligned_sorted_read
-	// bam_index = sam_out.index
-	// aligned_stats = sam_out.aligned_stats
-	// matchbox_stats_best = matchbox_out_best.matchbox_stats
-	// matchbox_files_best = matchbox_out_best.matchbox_files
-	// matchbox_stats_all = matchbox_out_all.matchbox_stats
-	// matchbox_files_all = matchbox_out_all.matchbox_files
-	// annotated_hc_best = riot_out_best.annot_heavy
-	// annotated_lc_best = riot_out_best.annot_light
-	// annotated_hc_all = riot_out_all.annot_heavy
-	// annotated_lc_all = riot_out_all.annot_light
+	// Publish outputs
+    publish:
+	barcode_file = sample
+	bam_file = sam_out.aligned_sorted_read
+	bam_index = sam_out.index
+	aligned_stats = sam_out.aligned_stats
+	matchbox_stats_best = matchbox_out_best.matchbox_stats
+	matchbox_files_best = matchbox_out_best.matchbox_files
+	matchbox_stats_all = matchbox_out_all.matchbox_stats
+	matchbox_files_all = matchbox_out_all.matchbox_files
+	annotated_hc_best = riot_out_best.annot_heavy
+	annotated_lc_best = riot_out_best.annot_light
+	annotated_hc_all = riot_out_all.annot_heavy
+	annotated_lc_all = riot_out_all.annot_light
 
 	// Completion message
 	onComplete:
@@ -122,39 +115,42 @@ workflow {
     log.error "Error: Pipeline execution stopped with the following message: ${workflow.errorMessage}".stripIndent()
 }
 
-// // Set output paths
-// output {
-// 	bam_file {
-//         path "1_aligned_reads/bam_files"
-//     }
-// 	bam_index {
-//         path "1_aligned_reads/bam_files"
-//     }
-// 	aligned_stats {
-// 		path "1_aligned_reads/stats"
-// 	}
-// 	matchbox_stats_best {
-// 		path "2_extracted_reads/best/counts"
-// 	}
-// 	matchbox_files_best {
-// 		path "2_extracted_reads/best/fasta_files"
-// 	}
-// 	matchbox_stats_all {
-// 		path "2_extracted_reads/all/counts"
-// 	}
-// 	matchbox_files_all {
-// 		path "2_extracted_reads/all/fasta files"
-// 	}
-// 	annotated_hc_best {
-// 		path "3_annotated_reads/best"
-// 	}
-// 	annotated_lc_best {
-// 		path "3_annotated_reads/best"
-// 	}
-// 	annotated_hc_all {
-// 		path "3_annotated_reads/all"
-// 	}
-// 	annotated_lc_all {
-// 		path "3_annotated_reads/best"
-// 	}
+// Set output paths
+output {
+	barcode_file {
+        path "1_combined_reads"
+    }
+	bam_file {
+        path "2_aligned_reads/bam_files"
+    }
+	bam_index {
+        path "2_aligned_reads/bam_files"
+    }
+	aligned_stats {
+		path "2_aligned_reads/stats"
+	}
+	matchbox_stats_best {
+		path "3_extracted_reads/best/counts"
+	}
+	matchbox_files_best {
+		path "3_extracted_reads/best/fasta_files"
+	}
+	matchbox_stats_all {
+		path "3_extracted_reads/all/counts"
+	}
+	matchbox_files_all {
+		path "4_extracted_reads/all/fasta files"
+	}
+	annotated_hc_best {
+		path "4_annotated_reads/best"
+	}
+	annotated_lc_best {
+		path "4_annotated_reads/best"
+	}
+	annotated_hc_all {
+		path "4_annotated_reads/all"
+	}
+	annotated_lc_all {
+		path "4_annotated_reads/best"
+	}
 }
