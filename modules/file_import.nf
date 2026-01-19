@@ -42,7 +42,7 @@ process concat_reads {
 workflow parse_sample_sheet {
     
     take:
-    fastq_dir: String // Directory where reads are stored
+    read_dir: String // Directory where reads are stored
     sample_sheet: Path // Path to sample sheet
     
     main:
@@ -53,7 +53,7 @@ workflow parse_sample_sheet {
 
     // Get list of files for each barcode
     barcode_files = barcodes
-    .map { barcode -> tuple(barcode, files("${fastq_dir}/**${barcode}*.{fastq, fq, fastq.gz, fq.gz}")) }
+    .map { barcode -> tuple(barcode, files("${read_dir}/**${barcode}*.{fastq, fq, fastq.gz, fq.gz}")) }
 
     // Read and concat (if multiple files) into one file per sample / barcode
     sample = concat_reads(barcode_files)
