@@ -6,7 +6,7 @@ Utilize matchbox to extract only the variable heavy and light chains.
 nextflow.preview.types = true
 
 process run_matchbox {
-	tag "${sample_name}"
+	tag "${barcode}"
     label "process_high"
 
     // Use Singularity container or pull from Docker container for samtools (linux/amd64) if singularity profile is enabled
@@ -15,7 +15,7 @@ process run_matchbox {
 	// Declare inputs required for the process
     input:
     // Tuple for sample name, and path for DNA sequence fastq files
-	(sample_name, read_file): Tuple<String, Path>
+	(barcode, read_file): Tuple<String, Path>
     matchbox_script: Path // Path to matchbox script
     LCss: String //Light chain signal sequence
     LC_after_lambda: String //Lambda light chain constant region sequence
@@ -25,8 +25,8 @@ process run_matchbox {
     match_param: String
 
     output:
-    matchbox_stats: Path = file("${sample_name}_count.csv")
-    matchbox_files = tuple(sample_name, file("${sample_name}_heavy.fasta"), file("${sample_name}_light.fasta"))
+    matchbox_stats: Path = file("${barcode}_count.csv")
+    matchbox_files = tuple(barcode, file("${barcode}_heavy.fasta"), file("${barcode}_light.fasta"))
 
     /*
     Run matchbox script, output only heavy and light chain reads, and statistics
@@ -34,12 +34,13 @@ process run_matchbox {
     -e  Include error tolerance of 0.3 (30%) for insertions, deletions and substitutions
     -a  Set seqid argument as the sample name, along with target sequences for extraction of light and heavy chains
     --with-reverse-complement   Also process the reverse complement of the reads over the script
+    -m  Select the match parameter (all, all-best, one-best)
     */
     script:
     """
 	matchbox \\
     -s ${matchbox_script} -e 0.3 \\
-    -a "seqid='${sample_name}', LCss = ${LCss}, LC_after_lambda = ${LC_after_lambda}, LC_after_kappa = ${LC_after_kappa}, HCss = ${HCss}, HC_after = ${HC_after}" \\
+    -a "seqid='${barcode}', LCss = ${LCss}, LC_after_lambda = ${LC_after_lambda}, LC_after_kappa = ${LC_after_kappa}, HCss = ${HCss}, HC_after = ${HC_after}" \\
     --with-reverse-complement \\
     -m ${match_param}\\
     ${read_file}
@@ -52,26 +53,21 @@ workflow matchbox {
     take:
     files: Tuple<String, Path> // Tuple for sample name, and path for DNA sequence fastq files
     matchbox_script: Path // Path to matchbox script
-    matchbox_parameters: Path
-    match_param: String
+    matchbox_parameters: Path // Path to matchbox parameters
+    match_param: String // Matchbox script matching argument
 
-    /*
-    Run matchbox script, output only heavy and light chain reads, and statistics
-    -s  Execute the matchbox script
-    -e  Include error tolerance of 0.3 (30%) for insertions, deletions and substitutions
-    -a  Set seqid argument as the sample name
-    --with-reverse-complement   Also process the reverse complement of the reads over the script
-    */
     main:
+    // Parse parameters file
     parameters = file(matchbox_parameters)
     .splitCsv( header: true )
     .collectEntries { row -> [(row.Parameter): row.Value] }
 
+    // Run matchbox process
     matchbox_out = run_matchbox(files, matchbox_script, 
     parameters.LCss, parameters.LC_after_lambda, parameters.LC_after_kappa, 
     parameters.HCss, parameters.HC_after, match_param)
 
-	// // Declare outputs
+	// Declare outputs
 	emit:
 	matchbox_stats = matchbox_out.matchbox_stats
     matchbox_files = matchbox_out.matchbox_files

@@ -6,7 +6,7 @@ Utilize minimap2 to align Oxford Nanopore DNA read sequences contained in fastq 
 nextflow.preview.types = true
 
 process minimap2 {
-	tag "${sample_name}"
+	tag "${barcode}"
 	label "process_high"
 
 	// Enable conda and install minimap2 if conda profile is set
@@ -18,13 +18,12 @@ process minimap2 {
     'community.wave.seqera.io/library/minimap2:2.30--dde6b0c5fbc82ebd' }"
 
     input:
-	// Tuple for sample name, and path for DNA sequence fastq files
-	(sample_name, read_file): Tuple<String, Path>
+	(barcode, read_file): Tuple<String, Path> // Tuple for sample name, and path for DNA sequence fastq files
 	reference: Path // Path for reference genome
 	
 	// Output tuple with sample name and sam file
 	output:
-	minimap_out = tuple(sample_name, file("${sample_name}_aligned.sam"))
+	minimap_out = tuple(barcode, file("${barcode}_aligned.sam"))
 
 	/*
 	Run minimap, mapping reads to a reference and outputs a sam file
@@ -38,6 +37,6 @@ process minimap2 {
 	-ax map-ont \\
 	${reference} \\
 	${read_file} \\
-	-o "${sample_name}_aligned.sam"
+	-o "${barcode}_aligned.sam"
     """
 }
