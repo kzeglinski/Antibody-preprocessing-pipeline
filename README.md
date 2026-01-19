@@ -7,27 +7,30 @@ This nextflow pipeline is designed to assist in processing of antibody long-read
 
 ## Usage
 ```
-Usage:  nextflow run main.nf --read_files [input path of fastq files] \\
-        --phagemid_ref [reference genome] --matchbox_script [matchbox script]
+Usage:  nextflow run main.nf --read_dir [path to fastq files] --sample_sheet [path to sample sheet] \\
+		--phagemid_ref [path to reference genome] --matchbox_script [path to matchbox script]
 
---help              : prints this help message
+--help              	: prints this help message
 
 Required Arguments:
---read_files		: Specify full path of read file(s) location.
---phagemid_ref		: Specify location of the reference genome.
---matchbox_script	: Specify matchbox script.
+--read_dir				: Specify full path of read file(s) location
+--sample_sheet  		: Specify full path to the sample sheet
+--phagemid_ref			: Specify full path to the reference genome
+--matchbox_script		: Specify matchbox script
+--matchbox_parameters	: Specify parameters for matchbox script
 
 Optional Arguments:
---output_dir        : Where the output files will be written to (default: "$projectDir/results).
--profile		    : Specify the profile to run nextflow through.
-			          Options - [standard, wehi, conda, singularity, local] (default: standard).
+--output_dir        	: Where the output files will be written to (default: "$projectDir/results)
+-profile		    	: Specify the profile to run nextflow through
+						  Options - [standard, wehi, conda, singularity, local] (default: standard)
 ```
 
 ## Input
 This pipeline requires as input:
 * The path of the directory containing the basecalled and demultiplexed nanopore long reads
-    - Expects a directory containing all fastq files ending with barcode names (e.g. 1034_barcode1.fastq)
-* The reference genome to ne used in fa format
+    - Expects a directory containing all fastq files containing a barcode number within the file names (e.g. 1034_barcode1.fastq)
+* The sample sheet with the format [barcode, sample_name, species]
+* The reference genome to be used in fa format
 * The matchbox script to split the read into heavy and light chains
 * The path of the directory where it should write the results
 
