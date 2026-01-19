@@ -7,7 +7,7 @@ E.g. provides information on sequence and germline alignment, V(D)J & C sequence
 nextflow.preview.types = true
 
 process riot {
-	tag "${sample_name}"
+	tag "${barcode}"
 
     // Enable conda and install riot if conda profile is set
 	conda (params.enable_conda ? 'bioconda::riot-na=4.0.2' : null)
@@ -20,12 +20,12 @@ process riot {
 	// Declare inputs required for the process
     input:
     // Tuple for sample name, and paths for heavy chain and light chain files
-	(sample_name, heavy_file, light_file): Tuple<String, Path, Path>
+	(barcode, heavy_file, light_file): Tuple<String, Path, Path>
 	
 	// Declare outputs
 	output:
-	annot_heavy: Path = file("${sample_name}_annot_heavy.csv")
-    annot_light: Path = file("${sample_name}_annot_light.csv")
+	annot_heavy: Path = file("${barcode}_annot_heavy.csv")
+    annot_light: Path = file("${barcode}_annot_light.csv")
 
     /*
     Run riot
@@ -36,7 +36,7 @@ process riot {
     */
     script:
     """
-    riot_na -f ${heavy_file} --species HOMO_SAPIENS -p 16 -o "${sample_name}_annot_heavy.csv"
-    riot_na -f ${light_file} --species HOMO_SAPIENS -p 16 -o "${sample_name}_annot_light.csv"
+    riot_na -f ${heavy_file} --species HOMO_SAPIENS -p 16 -o "${barcode}_annot_heavy.csv"
+    riot_na -f ${light_file} --species HOMO_SAPIENS -p 16 -o "${barcode}_annot_light.csv"
     """
 }

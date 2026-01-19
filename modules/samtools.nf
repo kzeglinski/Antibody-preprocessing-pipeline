@@ -6,7 +6,7 @@ Utilize samtools to write SAM file to BAM file.
 nextflow.preview.types = true
 
 process samtools {
-	tag "${sample_name}"
+	tag "${barcode}"
 
 	// Enable conda and install samtools if conda profile is set
 	conda (params.enable_conda ? 'bioconda::samtools=1.22.1' : null)
@@ -18,23 +18,23 @@ process samtools {
 
     input:
 	// Tuple for sample name, and path for aligned reads after minimap2
-	(sample_name, aligned_read_file): Tuple<String, Path> 
+	(barcode, aligned_read_file): Tuple<String, Path> 
 	
 	// Output aligned reads, bam index file, and aligned QC statistics
 	output:
-	aligned_sorted_read: Path = file("${sample_name}_aligned_sorted.bam")
-	index: Path = file("${sample_name}_aligned_sorted.bam.bai")
-	aligned_stats: Path = file("${sample_name}_alignment_stats.tsv")
+	aligned_sorted_read: Path = file("${barcode}_aligned_sorted.bam")
+	index: Path = file("${barcode}_aligned_sorted.bam.bai")
+	aligned_stats: Path = file("${barcode}_alignment_stats.tsv")
 
     script:
     """
 	# View and convert file from SAM to BAM format. Sort alignments and outputs the file in BAM format
-	samtools view -b "${aligned_read_file}" | samtools sort -o "${sample_name}_aligned_sorted.bam"
+	samtools view -b "${aligned_read_file}" | samtools sort -o "${barcode}_aligned_sorted.bam"
 	
 	# Index BAM file for fast random access
-	samtools index "${sample_name}_aligned_sorted.bam"
+	samtools index "${barcode}_aligned_sorted.bam"
 	
 	# Counts the number of alignments for each FLAG type
-	samtools flagstat -O tsv "${sample_name}_aligned_sorted.bam" > "${sample_name}_alignment_stats.tsv"
+	samtools flagstat -O tsv "${barcode}_aligned_sorted.bam" > "${barcode}_alignment_stats.tsv"
     """
 }
