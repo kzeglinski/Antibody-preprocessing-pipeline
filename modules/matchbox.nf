@@ -22,7 +22,7 @@ process run_matchbox {
     LC_after_kappa: String //Kappa light chain constant region sequence
     HCss: String //Heavy chain signal sequence
     HC_after: String //Sequence directly after variable heavy chain sequence
-    match_param: String
+    match_param: String // Matchbox script matching argument
 
     output:
     matchbox_stats: Path = file("${barcode}_count.csv")
