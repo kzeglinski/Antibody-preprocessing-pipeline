@@ -18,10 +18,6 @@ process concat_reads {
     sample = tuple(barcode, file("${barcode}_merged.${extn}"))
 
     script:
-
-    println(files)
-    println(files.size())
-    
     // Check if all files are the same format, or if files are not found
     if( files.size() == 0 )
         error "No files found for ${barcode}"
