@@ -56,10 +56,6 @@ workflow parse_sample_sheet {
         tuple(barcode, files("${read_dir}/{*,**/*}${barcode}*.{fastq,fq,fastq.gz,fq.gz}"))
     }
 
-
-    
-    barcode_files.view()
-
     // Read and concat (if multiple files) into one file per sample / barcode
     sample = concat_reads(barcode_files)
 
